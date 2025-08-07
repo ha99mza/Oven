@@ -13,6 +13,7 @@ function createWindow(): void {
     width: 1200,
     height: 820,
     show: false,
+    kiosk: true,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -103,7 +104,7 @@ ipcMain.handle("start-temperature-logging", async (_event, productId: number, ov
   }
 
   serialPort = new SerialPort({
-    path: "COM14", // Com port 
+    path: "dev/ttyS2", // dev/ttyS2Com port 
     baudRate: 115200,
   })
 
