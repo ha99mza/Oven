@@ -77,9 +77,9 @@ export default function HistoryPage() {
         }}>
           <thead style={{ backgroundColor: "#E7962C", color: "white" }}>
             <tr>
-              <th style={thStyle}>Product ID</th>
+              <th style={thStyle}>Orde de Fabrication</th>
               <th style={thStyle}>Opération</th>
-              <th style={thStyle}>N° Pièce</th>
+              <th style={thStyle}>Quantite</th>
               <th style={thStyle}>Début</th>
               <th style={thStyle}>Fin</th>
               <th style={thStyle}>Durée (s)</th>

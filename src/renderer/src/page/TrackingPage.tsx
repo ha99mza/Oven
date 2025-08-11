@@ -131,7 +131,7 @@ export default function TrackingPage() {
       >
         <h2 style={{ textAlign: "center", marginBottom: "30px" }}>{ovenName} - Suivi</h2>
 
-        <label>Product ID</label>
+        <label>Orde de Fabrication</label>
         <input
           type="number"
           disabled={isRunning}
@@ -156,7 +156,7 @@ export default function TrackingPage() {
           <option value="Vernis Dolphon">Vernis Dolphon</option>
         </select>
 
-        <label>N° de Pièce</label>
+        <label>Quantite</label>
         <input
           type="number"
           disabled={isRunning}
@@ -176,9 +176,10 @@ export default function TrackingPage() {
             color: "white",
             padding: "18px",
             width: "100%",
+            height: "80px",
             border: "none",
             borderRadius: "15px",
-            fontSize: "16px",
+            fontSize: "30px",
             fontWeight: "bold"
           }}
         >
@@ -217,8 +218,10 @@ const secondaryButtonStyle: React.CSSProperties = {
   flex: 1,
   padding: "18px",
   margin: "0 5px",
+  height: "80px",
   backgroundColor: "#d3d3d3",
   border: "none",
   borderRadius: "12px",
+  fontSize: "30px",
   fontWeight: "bold"
 }

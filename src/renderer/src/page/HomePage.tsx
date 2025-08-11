@@ -45,14 +45,14 @@ export default function Home() {
   return (
     <div style={{ padding: "20px", backgroundColor: "#f6f8fa", minHeight: "100vh" }}>
       <header style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px", padding: "10px" }}>
-        <h1 style={{ fontSize: "28px" }}>Oven Tracker</h1>
+        <h1 style={{ fontSize: "48px" }}>Oven Tracker</h1>
       </header>
 
       <hr />
 
       <div style={cardContainerStyle}>
         <div>
-          <h2 style={{ textAlign: "center" }}>OVEN I</h2>
+          <h2 style={{ textAlign: "center", fontSize:  "38px" }}>OVEN I</h2>
           <OvenCard
             title=""
             status={oven1Temp !== undefined ? "Active" : "Non Active"}
@@ -63,7 +63,7 @@ export default function Home() {
         </div>
 
         <div>
-          <h2 style={{ textAlign: "center" }}>OVEN II</h2>
+          <h2 style={{ textAlign: "center", fontSize:  "38px"}}>OVEN II</h2>
           <OvenCard
             title=""
             status={oven2Temp !== undefined ? "Active" : "Non Active"}
