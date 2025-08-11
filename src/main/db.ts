@@ -24,7 +24,7 @@ export async function insertSession(ovenId: string, session: any) {
 export async function getSessions(ovenId: string) {
   const db = await connectDB()
   const col = db.collection(`sessions_${ovenId}`)
-  return await col.find().toArray()
+  return await col.find().sort({ startTime: -1 }).toArray()
 }
 
 /*export async function getTemperatures(productId: string) {
@@ -38,7 +38,7 @@ export async function getTemperatures(productId: string) {
 
   const docs = await col
     .find({}, { projection: { _id: 0, temperature: 1, timestamp: 1 } })
-    .sort({ timestamp: 1 })
+    .sort({ timestamp: -1 })
     .toArray()
 
   // 🔁 Transformation explicite : { temperature, timestamp } → { value, timestamp }

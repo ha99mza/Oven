@@ -53,16 +53,16 @@ export default function SessionDetailPage() {
     const csvContent = [
       `Four;${session?.ovenId ?? "-"}`,
       `Product ID;${session?.productId ?? "-"}`,
-      `Opération;${session?.operation ?? "-"}`,
-      `N° Pièce;${session?.pieceNumber ?? "-"}`,
-      `Début;${session?.startTime ? new Date(session.startTime).toLocaleString() : "-"}`,
-      `Fin;${session?.endTime ? new Date(session.endTime).toLocaleString() : "-"}`,
-      `Durée;${duration} min`,
-      `Température Max;${max.toFixed(2)} °C`,
-      `Température Min;${min.toFixed(2)} °C`,
-      `Température Moy;${moy.toFixed(2)} °C`,
+      `Operation;${session?.operation ?? "-"}`,
+      `N Piece;${session?.pieceNumber ?? "-"}`,
+      `Date Debut;${session?.startTime ? new Date(session.startTime).toLocaleString() : "-"}`,
+      `Date Fin;${session?.endTime ? new Date(session.endTime).toLocaleString() : "-"}`,
+      `Duree;${duration} min`,
+      `Temperature Max;${max.toFixed(2)} °C`,
+      `Temperature Min;${min.toFixed(2)} °C`,
+      `Temperature Moy;${moy.toFixed(2)} °C`,
       '',
-      'Température (°C);Horodatage',
+      'Temperature (°C);Horodatage',
       ...temps.map(t => `${t.value.toFixed(2)};${new Date(t.timestamp).toLocaleString()}`)
     ].join('\n')
 

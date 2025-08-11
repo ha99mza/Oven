@@ -24,11 +24,11 @@ export default function Home() {
       }
     }
 
-    // Démarrer l'intervalle
-    const id = setInterval(fetchTemperature, 5000) // toutes les 10s
+    
+    const id = setInterval(fetchTemperature, 1000) // toutes les 1s
     setIntervalId(id)
 
-    // Nettoyage à la sortie de la page
+    
     return () => {
       if (id) clearInterval(id)
     }

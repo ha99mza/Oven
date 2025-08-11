@@ -5,7 +5,7 @@ import { SerialPort, ReadlineParser } from "serialport"
 import { MongoClient } from "mongodb"
 import { getSessions, insertSession, getTemperatures } from "./db"
 
-// ====== ÉTAT GLOBAL SANS PERSISTANCE DISQUE ======
+// -------- Types / État sessions en mémoire --------
 type ActiveSession = {
   ovenId: "oven1" | "oven2"
   productId: number
@@ -19,6 +19,7 @@ let sessionsState: Record<"oven1" | "oven2", ActiveSession | null> = {
   oven2: null
 }
 
+// -------- Flags & mesures courantes --------
 let oven1_status = false
 let oven2_status = false
 let currentProductId_Oven1 = ""
@@ -26,15 +27,19 @@ let currentProductId_Oven2 = ""
 let currentTemperatureOven1 = 0
 let currentTemperatureOven2 = 0
 
+//
+let lastInsertOven1 = 0
+let lastInsertOven2 = 0
+const INSERT_INTERVAL_MS = 60_000 // 30 secondes
+
 let serialPort: SerialPort | null = null
 let parser: ReadlineParser | null = null
-
 
 function initSerialReader(callback: (data: any) => void) {
   if (serialPort?.isOpen) return
 
   serialPort = new SerialPort({
-    path: "/dev/ttyS2", //  Linux: "/dev/ttyS2"
+    path: "/dev/ttyS2", // Windows ex: COM11 — Linux: "/dev/ttyS2"
     baudRate: 115200
   })
 
@@ -45,7 +50,7 @@ function initSerialReader(callback: (data: any) => void) {
       const parsed = JSON.parse(line.trim())
       callback(parsed)
     } catch {
-      // ligne invalide
+      // ligne invalide -> on ignore
     }
   })
 
@@ -54,30 +59,33 @@ function initSerialReader(callback: (data: any) => void) {
   })
 }
 
-// Insère une mesure si la session de ce four est active
+
 async function insertTemperatureIfActive(parsed: any) {
   try {
+    const now = Date.now()
     const mongo = new MongoClient("mongodb://localhost:27017")
     await mongo.connect()
     const db = mongo.db("oven_tracker")
 
     if (typeof parsed?.temp1 === "number") {
-      currentTemperatureOven1 = parsed.temp1
-      if (oven1_status && currentProductId_Oven1) {
+      currentTemperatureOven1 = Math.floor(parsed.temp1)
+      if (oven1_status && currentProductId_Oven1 && (now - lastInsertOven1 >= INSERT_INTERVAL_MS)) {
         await db.collection(currentProductId_Oven1).insertOne({
           temperature: parsed.temp1,
           timestamp: new Date()
         })
+        lastInsertOven1 = now
       }
     }
 
     if (typeof parsed?.temp2 === "number") {
-      currentTemperatureOven2 = parsed.temp2
-      if (oven2_status && currentProductId_Oven2) {
+      currentTemperatureOven2 = Math.floor(parsed.temp2)
+      if (oven2_status && currentProductId_Oven2 && (now - lastInsertOven2 >= INSERT_INTERVAL_MS)) {
         await db.collection(currentProductId_Oven2).insertOne({
           temperature: parsed.temp2,
           timestamp: new Date()
         })
+        lastInsertOven2 = now
       }
     }
 
@@ -87,11 +95,11 @@ async function insertTemperatureIfActive(parsed: any) {
   }
 }
 
-
+// -------- Fenêtre --------
 function createWindow(): void {
-  
+  // Démarre la lecture série au lancement
   initSerialReader((data) => {
-    console.log("Données reçues du port série:", data)
+    // console.log("📡 Série:", data)
     insertTemperatureIfActive(data)
   })
 
@@ -123,6 +131,7 @@ function createWindow(): void {
   }
 }
 
+// -------- Cycle de vie app --------
 app.whenReady().then(() => {
   electronApp.setAppUserModelId("com.electron")
   app.on("browser-window-created", (_, window) => {
@@ -145,7 +154,7 @@ app.on("window-all-closed", () => {
   }
 })
 
-// Mongo query
+// -------- IPC: Mongo (historique & lectures) --------
 ipcMain.handle("save-session", async (_event, ovenId: string, session: any) => {
   await insertSession(ovenId, session)
 })
@@ -170,7 +179,7 @@ ipcMain.handle("check-product-id-exists", async (_event, productId: number) => {
   }
 })
 
-
+// -------- IPC: État de session en mémoire --------
 ipcMain.handle("start-session", (_e, payload: {
   ovenId: "oven1" | "oven2",
   productId: number,
@@ -183,7 +192,7 @@ ipcMain.handle("start-session", (_e, payload: {
     return { ok: false, reason: "already-running" }
   }
 
-  // Activer le flag d'enregistrement pour ce four
+  // Activer l'enregistrement pour ce four
   if (ovenId === "oven1") {
     oven1_status = true
     currentProductId_Oven1 = String(productId)
@@ -200,11 +209,15 @@ ipcMain.handle("start-session", (_e, payload: {
     startTime: new Date().toISOString()
   }
 
+  // reset du throttle à la création de session (facultatif)
+  if (ovenId === "oven1") lastInsertOven1 = 0
+  else lastInsertOven2 = 0
+
   return { ok: true }
 })
 
 ipcMain.handle("stop-session", (_e, ovenId: "oven1" | "oven2") => {
-  // Couper le flag d'enregistrement pour ce four
+  // Désactiver l'enregistrement pour ce four
   if (ovenId === "oven1") {
     oven1_status = false
     currentProductId_Oven1 = ""
@@ -221,7 +234,7 @@ ipcMain.handle("get-active-session", (_e, ovenId: "oven1" | "oven2") => {
   return sessionsState[ovenId] || null
 })
 
-// Température live (utile pour Home)
+// Températures live (pour Home)
 ipcMain.handle("read-live-temperature", async () => {
   return {
     oven1: currentTemperatureOven1 || null,
