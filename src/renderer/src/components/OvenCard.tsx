@@ -18,6 +18,7 @@ const OvenCard = ({ title, status, temperature, onSelect, onHistory }: OvenCardP
       boxShadow: "4px 4px 10px rgba(0,0,0,0.1)",
       backgroundColor: "white",
       textAlign: "center",
+      
     }}>
       <h3>{title}</h3>
       <p><strong>Status:</strong> {status}</p>
@@ -27,10 +28,10 @@ const OvenCard = ({ title, status, temperature, onSelect, onHistory }: OvenCardP
         {temperature ? `${temperature.toFixed(2)} °C` : "—"}
       </p>
       <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-        <button onClick={onSelect} style={{ flex: 1, padding: "20px", backgroundColor: "#E7962C", borderRadius: "20px", border: "none" }}>
+        <button onClick={onSelect} style={{ flex: 1,fontSize: "16px", padding: "20px", backgroundColor: "#E7962C", borderRadius: "20px", border: "none" }}>
           Select
         </button>
-        <button onClick={onHistory} style={{ flex: 1, padding: "20px", backgroundColor: "#d3d3d3", borderRadius: "20px", border: "none" }}>
+        <button onClick={onHistory} style={{ flex: 1,fontSize: "16px", padding: "20px", backgroundColor: "#d3d3d3", borderRadius: "20px", border: "none" }}>
           History
         </button>
       </div>

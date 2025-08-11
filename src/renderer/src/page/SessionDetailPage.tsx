@@ -148,12 +148,12 @@ const tdStyle: React.CSSProperties = { padding: "10px", fontSize: "15px" }
 
 const backBtnStyle: React.CSSProperties = {
   backgroundColor: "#E7962C", color: "white", padding: "8px 16px", border: "none",
-  borderRadius: "10px", fontWeight: "bold", cursor: "pointer"
+  borderRadius: "10px", fontWeight: "bold", cursor: "pointer",fontSize: "20px",
 }
 
 const exportBtnStyle: React.CSSProperties = {
   backgroundColor: "#E7962C", color: "white", padding: "8px 16px",
-  borderRadius: "10px", fontWeight: "bold", border: "none", cursor: "pointer"
+  borderRadius: "10px", fontWeight: "bold", border: "none", cursor: "pointer",fontSize: "20px",
 }
 
 const cardContainerStyle: React.CSSProperties = {

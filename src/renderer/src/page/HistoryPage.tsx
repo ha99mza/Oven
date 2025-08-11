@@ -56,7 +56,7 @@ export default function HistoryPage() {
             borderRadius: "10px",
             fontWeight: "bold",
             marginBottom: "20px",
-            cursor: "pointer"
+            cursor: "pointer",fontSize: "20px",
           }}
         >
           ⬅ Back
@@ -119,7 +119,7 @@ export default function HistoryPage() {
         {/* 🔄 Pagination controls */}
         <div style={{ marginTop: "20px", textAlign: "center" }}>
           <button onClick={prevPage} disabled={currentPage === 1} style={navButtonStyle}>⬅ Précédent</button>
-          <span style={{ margin: "0 15px" }}>Page {currentPage} / {totalPages}</span>
+          <span style={{ margin: "0 15px" ,fontSize: "14px",}}>Page {currentPage} / {totalPages}</span>
           <button onClick={nextPage} disabled={currentPage === totalPages} style={navButtonStyle}>Suivant ➡</button>
         </div>
       </div>
@@ -146,5 +146,6 @@ const navButtonStyle: React.CSSProperties = {
   border: "none",
   borderRadius: "8px",
   fontWeight: "bold",
-  cursor: "pointer"
+  cursor: "pointer",
+  fontSize: "20px",
 }

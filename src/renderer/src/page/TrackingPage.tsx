@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 
 export default function TrackingPage() {
-  const { ovenId } = useParams()
+  const { ovenId } = useParams<{ ovenId: "oven1" | "oven2" }>()
   const navigate = useNavigate()
   const ovenName = ovenId === "oven1" ? "Oven I" : "Oven II"
 
@@ -10,89 +10,104 @@ export default function TrackingPage() {
   const [operation, setOperation] = useState("")
   const [pieceNumber, setPieceNumber] = useState<number | undefined>()
   const [isRunning, setIsRunning] = useState(false)
-  const [elapsedTime, setElapsedTime] = useState(0)
   const [startTime, setStartTime] = useState<Date | null>(null)
-  let timer: NodeJS.Timeout
-  // Chrono en secondes
-  useEffect(() => {
-    
-    if (isRunning) {
-      timer = setInterval(() => setElapsedTime((prev) => prev + 1), 1000)
-    } else {
-      clearInterval(timer)
-    }
-    return () => clearInterval(timer)
-  }, [isRunning])
+  const [elapsedTime, setElapsedTime] = useState(0)
 
-  // Format chrono
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
+  // Restaure une session active (en mémoire côté main)
+  useEffect(() => {
+    let mounted = true
+    const restore = async () => {
+      const session = await window.electron.ipcRenderer.invoke("get-active-session", ovenId)
+      if (!mounted) return
+      if (session) {
+        setProductId(Number(session.productId))
+        setOperation(session.operation)
+        setPieceNumber(Number(session.pieceNumber))
+        const st = new Date(session.startTime)
+        setStartTime(st)
+        setIsRunning(true)
+        setElapsedTime(Math.floor((Date.now() - st.getTime()) / 1000))
+      }
+    }
+    restore()
+    return () => { mounted = false }
+  }, [ovenId])
+
+  // Chrono basé sur startTime (pas d'accumulation locale)
+  useEffect(() => {
+    if (!isRunning || !startTime) return
+    const id = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - startTime.getTime()) / 1000))
+    }, 1000)
+    return () => clearInterval(id)
+  }, [isRunning, startTime])
+
+  const formatTime = (s: number) => {
+    const mins = Math.floor(s / 60)
+    const secs = s % 60
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
   }
 
-  // Démarrer / Arrêter
-  const toggleStartStop = async () => {
-    if (!isRunning) {
-      
-      if (!productId || !operation || !pieceNumber) {
-        alert("Veuillez remplir tous les champs.")
-        return
-      }
-      
-      try {
+  const onStart = async () => {
+    if (!productId || !operation || !pieceNumber) {
+      alert("Veuillez remplir tous les champs.")
+      return
+    }
+
+    // Empêcher de réutiliser un productId déjà existant (collection)
+    try {
       const exists = await window.electron.ipcRenderer.invoke("check-product-id-exists", productId)
       if (exists) {
         alert(`Le Product ID ${productId} existe déjà. Veuillez en choisir un autre.`)
         return
       }
-    } catch (error) {
-      console.error("Erreur lors de la vérification du Product ID :", error)
+    } catch (e) {
+      console.error("check-product-id-exists error:", e)
       alert("Erreur lors de la vérification du Product ID.")
       return
     }
-      setIsRunning(true)
-      setElapsedTime(0)
-      const start = new Date()
-      setStartTime(start)
 
-      try {
-        await window.electron.ipcRenderer.invoke("start-temperature-logging", productId, ovenId)
-        console.log("Lecture série démarrée")
-      } catch (err) {
-        console.error("Erreur de démarrage :", err)
-        alert("Erreur lors du démarrage de la lecture série.")
-      }
-    } else {
-      setIsRunning(false)
-      const end = new Date()
-      await saveSession(end)
+    // Demander au main de démarrer la session (active flags d’enregistrement)
+    const res = await window.electron.ipcRenderer.invoke("start-session", {
+      ovenId,
+      productId,
+      operation,
+      pieceNumber
+    })
 
-      try {
-        await window.electron.ipcRenderer.invoke("stop-temperature-logging")
-        console.log("Lecture série arrêtée")
-      } catch (err) {
-        console.error("Erreur à l'arrêt :", err)
-        alert("Erreur lors de l'arrêt de la lecture série.")
-      }
+    if (!res?.ok) {
+      alert("Une session est déjà en cours pour ce four.")
+      return
     }
+
+    const now = new Date()
+    setStartTime(now)
+    setElapsedTime(0)
+    setIsRunning(true)
   }
 
-  const saveSession = async (end: Date) => {
-    const session = {
+  const onStop = async () => {
+    // Stop côté main
+    await window.electron.ipcRenderer.invoke("stop-session", ovenId)
+
+    // Enregistre l’historique dans Mongo
+    const end = new Date()
+    await window.electron.ipcRenderer.invoke("save-session", ovenId, {
       productId,
       operation,
       pieceNumber,
       startTime: startTime?.toISOString(),
-      endTime: end.toISOString(),
-    }
+      endTime: end.toISOString()
+    })
 
-    try {
-      await window.electron.ipcRenderer.invoke("save-session", ovenId, session)
-      //alert("Session enregistrée avec succès.")
-    } catch (error) {
-      console.error("Erreur d'enregistrement :", error)
-      //alert("Échec de l'enregistrement.")
+    setIsRunning(false)
+  }
+
+  const toggleStartStop = async () => {
+    if (!isRunning) {
+      await onStart()
+    } else {
+      await onStop()
     }
   }
 
@@ -102,7 +117,7 @@ export default function TrackingPage() {
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      backgroundColor: "#f6f8fa",
+      backgroundColor: "#f6f8fa"
     }}>
       <div style={{
         padding: "40px",
@@ -110,7 +125,7 @@ export default function TrackingPage() {
         maxWidth: "600px",
         backgroundColor: "white",
         borderRadius: "20px",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
       }}>
         <h2 style={{ textAlign: "center", marginBottom: "30px" }}>{ovenName} - Suivi</h2>
 
@@ -152,16 +167,19 @@ export default function TrackingPage() {
           {formatTime(elapsedTime)}
         </div>
 
-        <button onClick={toggleStartStop} style={{
-          backgroundColor: isRunning ? "#DC3545" : "#E7962C",
-          color: "white",
-          padding: "12px",
-          width: "100%",
-          border: "none",
-          borderRadius: "15px",
-          fontSize: "16px",
-          fontWeight: "bold"
-        }}>
+        <button
+          onClick={toggleStartStop}
+          style={{
+            backgroundColor: isRunning ? "#DC3545" : "#E7962C",
+            color: "white",
+            padding: "12px",
+            width: "100%",
+            border: "none",
+            borderRadius: "15px",
+            fontSize: "16px",
+            fontWeight: "bold"
+          }}
+        >
           {isRunning ? "Stop" : "Start"}
         </button>
 

@@ -1,4 +1,3 @@
-// src/pages/Home.tsx
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import OvenCard from "../components/OvenCard"
@@ -14,19 +13,19 @@ export default function Home() {
     const fetchTemperature = async () => {
       try {
         const result = await window.electron.ipcRenderer.invoke("read-live-temperature")
-        if (result.temp1 !== undefined) {
-          setOven1Temp(result.temp1)
+        if (result.oven1 !== undefined) {
+          setOven1Temp(result.oven1)
         }
-        if (result.temp2 !== undefined) {
-          setOven2Temp(result.temp2)
+        if (result.oven2 !== undefined) {
+          setOven2Temp(result.oven2)
         }
       } catch (err) {
-        console.error("❌ Erreur lecture température live:", err)
+        console.error(" Erreur lecture température live:", err)
       }
     }
 
     // Démarrer l'intervalle
-    const id = setInterval(fetchTemperature, 10000) // toutes les 10s
+    const id = setInterval(fetchTemperature, 5000) // toutes les 10s
     setIntervalId(id)
 
     // Nettoyage à la sortie de la page
