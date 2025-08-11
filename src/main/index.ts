@@ -29,12 +29,12 @@ let currentTemperatureOven2 = 0
 let serialPort: SerialPort | null = null
 let parser: ReadlineParser | null = null
 
-// ====== LECTURE SÉRIE AU LANCEMENT ======
+
 function initSerialReader(callback: (data: any) => void) {
   if (serialPort?.isOpen) return
 
   serialPort = new SerialPort({
-    path: "COM10", // 👉 Windows (ex: COM10). Sous Linux: "/dev/ttyS2"
+    path: "/dev/ttyS2", //  Linux: "/dev/ttyS2"
     baudRate: 115200
   })
 
@@ -89,9 +89,9 @@ async function insertTemperatureIfActive(parsed: any) {
 
 
 function createWindow(): void {
-  // Start serial reader
+  
   initSerialReader((data) => {
-    // console.log( data)
+    console.log("Données reçues du port série:", data)
     insertTemperatureIfActive(data)
   })
 
@@ -170,7 +170,7 @@ ipcMain.handle("check-product-id-exists", async (_event, productId: number) => {
   }
 })
 
-// ====== IPC: ÉTAT DE SESSION EN MÉMOIRE (PAS DE DISQUE) ======
+
 ipcMain.handle("start-session", (_e, payload: {
   ovenId: "oven1" | "oven2",
   productId: number,
@@ -224,7 +224,7 @@ ipcMain.handle("get-active-session", (_e, ovenId: "oven1" | "oven2") => {
 // Température live (utile pour Home)
 ipcMain.handle("read-live-temperature", async () => {
   return {
-    oven1: currentTemperatureOven1.toFixed(0) || null,
-    oven2: currentTemperatureOven2.toFixed(0) || null
+    oven1: currentTemperatureOven1 || null,
+    oven2: currentTemperatureOven2 || null
   }
 })
