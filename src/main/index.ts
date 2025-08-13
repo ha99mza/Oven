@@ -30,7 +30,7 @@ let currentTemperatureOven2 = 0
 //
 let lastInsertOven1 = 0
 let lastInsertOven2 = 0
-const INSERT_INTERVAL_MS = 60_000 // 30 secondes
+const INSERT_INTERVAL_MS = 60_000 // 60 secondes
 
 let serialPort: SerialPort | null = null
 let parser: ReadlineParser | null = null
@@ -39,7 +39,7 @@ function initSerialReader(callback: (data: any) => void) {
   if (serialPort?.isOpen) return
 
   serialPort = new SerialPort({
-    path: "/dev/ttyS2", // Windows ex: COM11 — Linux: "/dev/ttyS2"
+    path: "COM10", // Windows ex: COM11 — Linux: "/dev/ttyS2"
     baudRate: 115200
   })
 
@@ -163,8 +163,8 @@ ipcMain.handle("get-sessions", async (_event, ovenId: string) => {
   return await getSessions(ovenId)
 })
 
-ipcMain.handle("get-session-temperatures", async (_event, productId: string) => {
-  return await getTemperatures(productId)
+ipcMain.handle("get-session-temperatures", async (_event, productId: string, startTime?: string, endTime?: string) => {
+  return await getTemperatures(productId, startTime, endTime)
 })
 
 ipcMain.handle("check-product-id-exists", async (_event, productId: number) => {

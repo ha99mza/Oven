@@ -29,7 +29,12 @@ export default function SessionDetailPage() {
   useEffect(() => {
     const fetchTemps = async () => {
       try {
-        const result = await window.electron.ipcRenderer.invoke("get-session-temperatures", productId)
+        const result = await window.electron.ipcRenderer.invoke(
+          "get-session-temperatures", 
+           productId,
+           session?.startTime ?? "-",
+           session?.endTime ?? "-"
+          )
         setTemps(result)
       } catch (err) {
         console.error("Erreur de récupération des températures :", err)
