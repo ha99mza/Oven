@@ -39,7 +39,7 @@ function initSerialReader(callback: (data: any) => void) {
   if (serialPort?.isOpen) return
 
   serialPort = new SerialPort({
-    path: "COM10", // Windows ex: COM11 — Linux: "/dev/ttyS2"
+    path: "/dev/ttyS2", // Windows ex: COM11 — Linux: "/dev/ttyS2"
     baudRate: 115200
   })
 

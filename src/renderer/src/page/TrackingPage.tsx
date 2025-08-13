@@ -181,7 +181,7 @@ export default function TrackingPage() {
             disabled={isRunning}
             value={activeInput === "productId" ? inputValue : productId ?? ""}
             onFocus={() => {
-              setActiveInput(null)
+              setActiveInput("productId")
               setInputValue(productId ? String(productId) : "")
             }}
             onChange={(e) => {
